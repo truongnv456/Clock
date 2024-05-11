@@ -9,12 +9,20 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.lifecycle.Observer;
 import androidx.lifecycle.ViewModelProvider;
 
+import com.paci.training.android.truongnv92.clock.model.ServiceRepository;
 import com.paci.training.android.truongnv92.clock.viewmodel.ClockViewModel;
+
+import java.util.Timer;
+import java.util.TimerTask;
 
 public class MainActivity extends AppCompatActivity {
     private static final String TAG = MainActivity.class.getName();
 
     private ClockViewModel mClockViewModel;
+    private boolean isTimerRunningVNam = false;
+    private boolean isTimerRunningUSA = false;
+    private Timer timerVNam, timerUSA;
+
     Button btnVietNam, btnUSA;
     TextView tvTime;
 
@@ -25,45 +33,48 @@ public class MainActivity extends AppCompatActivity {
 
         initView();
         mClockViewModel = new ViewModelProvider(this).get(ClockViewModel.class);
-        mClockViewModel.connectToRepository(this);
+
+        mClockViewModel.getCurrentTimeVietNamLiveData().observe(this, new Observer<String>() {
+            @Override
+            public void onChanged(String time) {
+                if (isTimerRunningVNam) {
+                    tvTime.setText(time);
+                }
+            }
+        });
+
+        mClockViewModel.getCurrentTimeUSALiveData().observe(this, new Observer<String>() {
+            @Override
+            public void onChanged(String time) {
+                if (isTimerRunningUSA) {
+                    tvTime.setText(time);
+                }
+            }
+        });
 
         btnVietNam.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                // Observer cho thời gian Việt Nam
-                mClockViewModel.getCurrentTimeVietNamLiveData().observe(MainActivity.this
-                        , new Observer<String>() {
-                            @Override
-                            public void onChanged(String time) {
-                                tvTime.setText(time);
-                            }
-                        });
+                if (isTimerRunningUSA) {
+                    stopTimerUSA();
+                    isTimerRunningUSA = false;
+                }
+                startTimerVNam();
+                isTimerRunningVNam = true;
             }
         });
 
         btnUSA.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                // Observer cho thời gian Hoa Kỳ
-                mClockViewModel.getCurrentTimeUSALiveData().observe(MainActivity.this, new Observer<String>() {
-                    @Override
-                    public void onChanged(String time) {
-                        tvTime.setText(time);
-                    }
-                });
+                if (isTimerRunningVNam) {
+                    stopTimerVNam();
+                    isTimerRunningVNam = false;
+                }
+                startTimerUSA();
+                isTimerRunningUSA = true;
             }
         });
-    }
-
-    @Override
-    protected void onResume() {
-        super.onResume();
-    }
-
-    @Override
-    protected void onDestroy() {
-        super.onDestroy();
-        mClockViewModel.disConnectToRepository(this);
     }
 
     private void initView() {
@@ -71,4 +82,37 @@ public class MainActivity extends AppCompatActivity {
         btnUSA = findViewById(R.id.btnUSA);
         tvTime = findViewById(R.id.tvTime);
     }
+
+    private void startTimerVNam() {
+        timerVNam = new Timer();
+        timerVNam.scheduleAtFixedRate(new TimerTask() {
+            @Override
+            public void run() {
+                mClockViewModel.requestCurrentTimeVietNam();
+            }
+        }, 0, 1000); // Cập nhật thời gian mỗi giây
+    }
+
+    private void stopTimerVNam() {
+        if (timerVNam != null) {
+            timerVNam.cancel();
+        }
+    }
+
+    private void stopTimerUSA() {
+        if (timerUSA != null) {
+            timerUSA.cancel();
+        }
+    }
+
+    private void startTimerUSA() {
+        timerUSA = new Timer();
+        timerUSA.scheduleAtFixedRate(new TimerTask() {
+            @Override
+            public void run() {
+                mClockViewModel.requestCurrentTimeUSA();
+            }
+        }, 0, 1000); // Cập nhật thời gian mỗi giây
+    }
 }
+

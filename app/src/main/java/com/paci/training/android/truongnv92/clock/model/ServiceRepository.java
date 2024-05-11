@@ -55,30 +55,20 @@ public class ServiceRepository {
 
     // Kết nối dịch vụ AIDL
     public String getCurrentTimeVietNam() {
-        if (isClockServiceAvailable()) {
-            try {
-                return mClockService.getCurrentTimeVietNam();
-            } catch (RemoteException e) {
-                Log.e(TAG, "RemoteException: " + e.getMessage());
-                return "Error get time Vietnam";
-            }
-        } else {
-            Log.e(TAG, "Clock service is not available");
+        try {
+            return mClockService.getCurrentTimeVietNam();
+        } catch (RemoteException e) {
+            Log.e(TAG, "RemoteException: " + e.getMessage());
             return "Error get time Vietnam";
         }
     }
 
     // Lấy thời gian hiện tại cho USA
     public String getCurrentTimeUsa() {
-        if (isClockServiceAvailable()) {
-            try {
-                return mClockService.getCurrentTimeUSA();
-            } catch (RemoteException e) {
-                Log.e(TAG, "RemoteException: " + e.getMessage());
-                return "Error get time Usa";
-            }
-        } else {
-            Log.e(TAG, "Clock service is not available");
+        try {
+            return mClockService.getCurrentTimeUSA();
+        } catch (RemoteException e) {
+            Log.i(TAG, "RemoteException: " + e.getMessage());
             return "Error get time Usa";
         }
     }
@@ -113,6 +103,5 @@ public class ServiceRepository {
 
     public interface TimeCallback {
         void onTimeReceived(String time);
-
     }
 }

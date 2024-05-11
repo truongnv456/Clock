@@ -1,24 +1,27 @@
 package com.paci.training.android.truongnv92.clock.viewmodel;
 
+import android.app.Application;
 import android.content.Context;
 
+import androidx.lifecycle.AndroidViewModel;
 import androidx.lifecycle.LiveData;
 import androidx.lifecycle.MutableLiveData;
 import androidx.lifecycle.ViewModel;
 
 import com.paci.training.android.truongnv92.clock.model.ServiceRepository;
 
-public class ClockViewModel extends ViewModel {
+public class ClockViewModel extends AndroidViewModel {
     private ServiceRepository mClockRepository;
-
-    public ClockViewModel() {
-        mClockRepository = new ServiceRepository();
-    }
 
     private MutableLiveData<String> currentTimeVietNamLiveData = new MutableLiveData<>();
     private MutableLiveData<String> currentTimeUSALiveData = new MutableLiveData<>();
 
-    // Getter cho LiveData
+    public ClockViewModel(Application application) {
+        super(application);
+        mClockRepository = new ServiceRepository();
+        mClockRepository.bindService(application);
+    }
+
     public LiveData<String> getCurrentTimeVietNamLiveData() {
         return currentTimeVietNamLiveData;
     }
@@ -27,20 +30,28 @@ public class ClockViewModel extends ViewModel {
         return currentTimeUSALiveData;
     }
 
-    public void connectToRepository(Context context) {
-        mClockRepository.bindService(context);
-        // Lắng nghe thay đổi thời gian và cập nhật LiveData
+    public void requestCurrentTimeVietNam() {
+        currentTimeVietNamLiveData.postValue(mClockRepository.getCurrentTimeVietNam());
+    }
+
+    public void requestCurrentTimeUSA() {
+        currentTimeUSALiveData.postValue(mClockRepository.getCurrentTimeUsa());
+    }
+
+    public void getTimeRunnableVietNam() {
         mClockRepository.getTimeRunnableVietNam(new ServiceRepository.TimeCallback() {
             @Override
             public void onTimeReceived(String time) {
                 currentTimeVietNamLiveData.postValue(time);
             }
         });
+    }
 
+    public void getTimeRunnableUSA() {
         mClockRepository.getTimeRunnableUsa(new ServiceRepository.TimeCallback() {
             @Override
             public void onTimeReceived(String time) {
-                currentTimeUSALiveData.postValue(time);
+                currentTimeVietNamLiveData.postValue(time);
             }
         });
     }
@@ -48,13 +59,6 @@ public class ClockViewModel extends ViewModel {
     public void disConnectToRepository(Context context) {
         mClockRepository.unbindService(context);
     }
-
-    public String getCurrentTimeVietNam() {
-        return mClockRepository.getCurrentTimeVietNam();
-    }
-
-    public String getCurrentTimeUsa() {
-        return mClockRepository.getCurrentTimeUsa();
-    }
 }
+
 
