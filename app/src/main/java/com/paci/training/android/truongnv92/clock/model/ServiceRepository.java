@@ -16,7 +16,6 @@ public class ServiceRepository {
     private static final String TAG = ServiceRepository.class.getSimpleName();
     private IClockService mClockService;
     private Handler handler = new Handler();
-    private Runnable updateTimeRunnableVN, updateTimeRunnableUSA;
     private boolean isServiceBound = false;
 
     public void bindService(Context context) {
@@ -49,10 +48,6 @@ public class ServiceRepository {
     };
 
     // Kiểm tra xem dịch vụ đã kết nối thành công chưa và mClockService có null không
-    private boolean isClockServiceAvailable() {
-        return isServiceBound && mClockService != null;
-    }
-
     // Kết nối dịch vụ AIDL
     public String getCurrentTimeVietNam() {
         try {
@@ -71,34 +66,6 @@ public class ServiceRepository {
             Log.i(TAG, "RemoteException: " + e.getMessage());
             return "Error get time Usa";
         }
-    }
-
-    // Runnable để cập nhật thời gian (Việt Nam)
-    public void getTimeRunnableVietNam(TimeCallback timeCallback) {
-        updateTimeRunnableVN = new Runnable() {
-            @Override
-            public void run() {
-                String currentTime = getCurrentTimeVietNam();
-                handler.postDelayed(this, 1000); // Lập lịch chạy sau mỗi 1000 milliseconds
-            }
-        };
-        handler.post(updateTimeRunnableVN);
-    }
-
-    // Runnable để cập nhật thời gian (Hoa Kỳ)
-    public void getTimeRunnableUsa(TimeCallback timeCallback) {
-        updateTimeRunnableUSA = new Runnable() {
-            @Override
-            public void run() {
-                String currentTime = getCurrentTimeUsa();
-                handler.postDelayed(this, 1000); // Lập lịch chạy sau mỗi 1000 milliseconds
-            }
-        };
-        handler.post(updateTimeRunnableUSA);
-    }
-
-    public boolean isServiceBound() {
-        return isServiceBound;
     }
 
     public interface TimeCallback {
